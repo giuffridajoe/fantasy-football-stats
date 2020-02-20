@@ -27,13 +27,11 @@ public class HttpUtils {
 	public static HttpResponse buildHttpRequest(String url, Map<String, String> headers) {
 		Map<String, String> requestHeaders = new HashMap<>();
 
-		requestHeaders.put("Authorization", "Bearer " + "token");
-		requestHeaders.putAll(headers);
-
 		try {
 			return HttpUtils.executeGet(url, headers);
 		} catch (Exception e) {
-			System.out.println("Error executing the following request:\n" + url);
+			System.out.println(
+					"Error executing the following request:\n" + url + ".\nException is: " + e);
 			return null;
 		}
 	}
