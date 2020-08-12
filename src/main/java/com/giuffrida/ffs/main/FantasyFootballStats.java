@@ -23,9 +23,8 @@ public class FantasyFootballStats {
 
 		httpResponse = stats.getFantasyStats();
 		Gson gson = new Gson();
-		URLEncoder encoder = null;
 		try {
-			encoder.encode(stats.getUrl(), "UTF-8");
+			URLEncoder.encode(stats.getUrl(), "UTF-8");
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
