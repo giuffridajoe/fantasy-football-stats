@@ -1,6 +1,5 @@
 package com.giuffrida.ffs.utils;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.http.HttpResponse;
@@ -22,17 +21,5 @@ public class HttpUtils {
 		System.out.println("Sending GET request to: " + url + " Response: " + response);
 		System.out.println("Response code: " + response.getStatusLine().getStatusCode());
 		return response;
-	}
-
-	public static HttpResponse buildHttpRequest(String url, Map<String, String> headers) {
-		Map<String, String> requestHeaders = new HashMap<>();
-
-		try {
-			return HttpUtils.executeGet(url, headers);
-		} catch (Exception e) {
-			System.out.println(
-					"Error executing the following request:\n" + url + ".\nException is: " + e);
-			return null;
-		}
 	}
 }

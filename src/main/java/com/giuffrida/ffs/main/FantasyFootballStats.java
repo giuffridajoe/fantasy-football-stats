@@ -1,17 +1,19 @@
 package com.giuffrida.ffs.main;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.giuffrida.ffs.utils.HttpUtils;
 import com.google.gson.Gson;
 
 public class FantasyFootballStats {
 
-	private String url = "https://fantasy.espn.com/apis/v3/games/ffl/leagueHistory/335710?seasonId?2019?view?mMatchup&espn_s2\\=AEB37Qk67gmkQ8rgUyGZeIIRiyM3vOXojQk5YaG3bLtyFkZsLjb8BcoewA35leBFdAhM9l/+Yd4ItheHr1krEzXrJ76WAw/Q/x7HICPzaAXgqbN7Ex0YF2m/3v0KaBiRyd6Pmr/h5R4gIiEVHcgijxuSPju7arCP1QaAwEhc0QMgRUzQI1ugKl3Kx6W1VN907oP3qvHlWpeyj8aPZDechSaGWf2tjPl/dEoUPW/mdwNdhwOPRr5tzlDUNv3ghRhxZHvLnf3z0hlxXURV0Tkq5fyI&swid\\={FED936E0-0A6F-43DB-87B5-ABE7B0A65799}";
+	private String url = "https://fantasy.espn.com/apis/v3/games/ffl/leagueHistory/335710?seasonId?2019?view?mMatchup";
 
 	public String getUrl() {
 		return url;
@@ -19,27 +21,29 @@ public class FantasyFootballStats {
 
 	public static void main(String[] args) {
 		FantasyFootballStats stats = new FantasyFootballStats();
-		HttpResponse httpResponse;
+		HttpResponse context;
 
-		httpResponse = stats.getFantasyStats();
-		Gson gson = new Gson();
 		try {
-			URLEncoder.encode(stats.getUrl(), "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			context = stats.getFantasyStats();
+			String response = IOUtils.toString(context.getEntity().getContent(), "UTF-8");
+			System.out.println("Response from GET: " + response);
+			JsonNode rootNode = new ObjectMapper().readTree(response);
+			if (!rootNode.elements().hasNext()) {
+				throw new Exception();
+			}
+		} catch (Exception e1) {
+			e1.printStackTrace();
 		}
-
-    }
-
-	public HttpResponse getFantasyStats() {
-		Map<String, String> headers = new HashMap<>();
-		
-		// headers.put("espn_s2", "");
-		// headers.put("swid", "");
-		return HttpUtils.buildHttpRequest(this.getUrl(), headers);
 	}
 
+	public HttpResponse getFantasyStats() throws Exception {
+		Map<String, String> headers = new HashMap<>();
+
+		headers.put("espn_s2",
+				"AEBbxpZL%2FJkEwzuW59WQniSvoNvszFfuFQuceG3DJe0W5XdlPIY1FI6%2FKW4SLIavucEtZ%2BLmVb9WqHpbXvYWcet0s69Ux%2F6wm5k3FX5qfW4YdFTEt%2FEzRWV5k%2Fo3qJOLuMGLOZmlCj%2BEiaG6Tsjo1a5kg6LJUJGkvXdhwSLE2F4%2BXL3iHLaXM7PNUQEIwDNqwMewHiBwaZ0MeYbWVSrsj6e%2FdtOn9Pyj7JYZzb2Ukc3yOqtQQVj04k1fftB2Xz4kthl2PsM%2BcLTSobUFj%2Bj622bTGMg46fn2PJalFWbFgQQjJg%3D%3D");
+		headers.put("swid", "{FED936E0-0A6F-43DB-87B5-ABE7B0A65799}");
+		return HttpUtils.executeGet(getUrl(), headers);
+	}
 
 	public String getPlaceFinished(String placeFinished) {
 		String placeAndOrdinal = "";
