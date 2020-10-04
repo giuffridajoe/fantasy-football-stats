@@ -6,6 +6,9 @@ import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.giuffrida.ffs.utils.HttpUtils;
@@ -21,44 +24,62 @@ public class FantasyFootballStats {
 	public static void main(String[] args) {
 		FantasyFootballStats stats = new FantasyFootballStats();
 		HttpResponse context;
-		ArrayList<FFTeamManager> managers = new ArrayList<>();
+		HashMap<String, String> members = new HashMap<>();
+		ArrayList<String> yearsPlayed = new ArrayList<>();
 
 		try {
-			context = stats.getFantasyStats();
-			String response = IOUtils.toString(context.getEntity().getContent(), "UTF-8");
-			System.out.println("Response from GET: " + response);
-			JsonNode rootNode = new ObjectMapper().readTree(response);
-			if (!rootNode.elements().hasNext()) {
-				throw new Exception();
-			}
+			context = stats.getLeagueHistory();
+			String leagueHistory = IOUtils.toString(context.getEntity().getContent(), "UTF-8");
+			System.out.println("Response from GET: " + leagueHistory);
 
-			managers = createTeamManagers(rootNode);
+			JsonNode rootArray = getRootArray(leagueHistory);
+
+			for (JsonNode jsonNode : rootArray) {
+				members = getMembers(jsonNode);
+				yearsPlayed.add(getYearPlayed(jsonNode));
+			}
 
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
 	}
 
-	private static ArrayList<FFTeamManager> createTeamManagers(JsonNode rootNode) throws Exception {
-		JsonNode members = rootNode.get(0).path("members");
-		ArrayList<FFTeamManager> tmList = new ArrayList<>();
+	private static JsonNode getRootArray(String leagueHistory)
+			throws JsonProcessingException, JsonMappingException, Exception {
+		JsonFactory jsonFactory = new JsonFactory();
+		ObjectMapper objectMapper = new ObjectMapper(jsonFactory);
 
-		for (JsonNode member : members) {
-			JsonNode id = member.path("id");
-			if (FFManager.getManagerFromGuid(id.toString()).equals(FFManager.None)) {
-				continue;
-			}
+		JsonNode rootArray = objectMapper.readTree(leagueHistory);
 
-			tmList.add(new FFTeamManager(id.toString()));
+		if (!rootArray.elements().hasNext()) {
+			throw new Exception("root array has no elements!");
 		}
-		return tmList;
+
+		if (!rootArray.isArray()) {
+			throw new Exception("root array is not an array!");
+		}
+		return rootArray;
 	}
 
-	public HttpResponse getFantasyStats() throws Exception {
+	private static String getYearPlayed(JsonNode jsonNode) {
+		return jsonNode.get("seasonId").asText();
+	}
+
+	private static HashMap<String, String> getMembers(JsonNode jsonNode) throws Exception {
+		JsonNode membersArray = jsonNode.get("members");
+		HashMap<String, String> namesAndIds = new HashMap<>();
+
+		for (JsonNode member : membersArray) {
+			namesAndIds.put(member.path("id").toString(), member.path("displayName").toString());
+		}
+		return namesAndIds;
+	}
+
+	public HttpResponse getLeagueHistory() throws Exception {
 		Map<String, String> headers = new HashMap<>();
 
 		headers.put("espn_s2",
-				"AEBbxpZL%2FJkEwzuW59WQniSvoNvszFfuFQuceG3DJe0W5XdlPIY1FI6%2FKW4SLIavucEtZ%2BLmVb9WqHpbXvYWcet0s69Ux%2F6wm5k3FX5qfW4YdFTEt%2FEzRWV5k%2Fo3qJOLuMGLOZmlCj%2BEiaG6Tsjo1a5kg6LJUJGkvXdhwSLE2F4%2BXL3iHLaXM7PNUQEIwDNqwMewHiBwaZ0MeYbWVSrsj6e%2FdtOn9Pyj7JYZzb2Ukc3yOqtQQVj04k1fftB2Xz4kthl2PsM%2BcLTSobUFj%2Bj622bTGMg46fn2PJalFWbFgQQjJg%3D%3D");
+				"AEB2R3iZrFhgkdKBrP71dcb4GY4gkxClY%2BzErrhGgJYgMeFvfwCfVPVhg56p3ys%2BuonSsEm2f0qVV%2FkTJCQxjuqOrbbexiAxjQKsCo5Pclj%2Fsl%2F%2FE5pKurw1DboN2BJ7IEOmCHHvXtq7mrCF9WZTvJudqS5s6QcYPfLmOYif7F3s2VuFGm6uMTASiDsMTM4wk6sH5Rbl6s9McpK2d06tejWxo6Dpp35Fwz28G%2F1Uxw%2FgtFyFFYSiNQ1%2BJq3ITiKCHmDEGbrPceUlwRhLCecfs3M4mm%2FqO9kQtE9r8I39XEsNkw%3D%3D");
 		headers.put("swid", "{FED936E0-0A6F-43DB-87B5-ABE7B0A65799}");
 		return HttpUtils.executeGet(getUrl(), headers);
 	}
