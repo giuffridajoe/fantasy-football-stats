@@ -119,4 +119,13 @@ public class FantasyFootballStats {
 		}
 		return guid;
 	}
+
+	public static String retrieveYearPlayed(JsonNode jsonNode) {
+		return getYearPlayed(jsonNode);
+	}
+
+	public static JsonNode retrieveRootArray(String leagueHistory)
+			throws JsonMappingException, JsonProcessingException, Exception {
+		return getRootArray(leagueHistory);
+	}
 }
