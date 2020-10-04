@@ -61,12 +61,12 @@ public class FantasyFootballStats {
 		return rootArray;
 	}
 
-	private static String getYearPlayed(JsonNode jsonNode) {
-		return jsonNode.get("seasonId").asText();
+	private static String getYearPlayed(JsonNode nodeFromRoot) {
+		return nodeFromRoot.get("seasonId").asText();
 	}
 
-	private static HashMap<String, String> getMembers(JsonNode jsonNode) throws Exception {
-		JsonNode membersArray = jsonNode.get("members");
+	private static HashMap<String, String> getMembers(JsonNode nodeFromRoot) throws Exception {
+		JsonNode membersArray = nodeFromRoot.get("members");
 		HashMap<String, String> namesAndIds = new HashMap<>();
 
 		for (JsonNode member : membersArray) {
@@ -127,5 +127,9 @@ public class FantasyFootballStats {
 	public static JsonNode retrieveRootArray(String leagueHistory)
 			throws JsonMappingException, JsonProcessingException, Exception {
 		return getRootArray(leagueHistory);
+	}
+
+	public static HashMap<String, String> retieveMembers(JsonNode nodeFromRoot) throws Exception {
+		return getMembers(nodeFromRoot);
 	}
 }
